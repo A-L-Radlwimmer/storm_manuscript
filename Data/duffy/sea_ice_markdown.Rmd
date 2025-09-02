@@ -1,0 +1,307 @@
+---
+title: "Duffy *et al.* - Emerging long-term trends and interdecadal cycles in Antarctic polynyas"
+date: "2023-10-30"
+output:
+  html_document:
+    df_print: paged
+  pdf_document:
+    latex_engine: xelatex
+---
+
+Load required packages. 
+```{r}
+require(terra)
+require(imager)
+require(xts)
+```
+List ice concentration raster files downloaded from EUMETSAT CDR data repository. 
+```{r, eval = FALSE}
+lst <- list.files("OSISAF-GLO-SEAICE_CONC_COMB_TIMESERIES-SH-LA-OBS", pattern = glob2rx("ice_conc*nc"), recursive = TRUE, full.names = TRUE) 
+```
+Define extent in projected coordinates and set sea ice concentration threshold (50% in this example).
+```{r}
+ice_ext <- ext(-5400, 5400, -5400, 5400)
+ice_threshold <- 0.5
+```
+Loop over every raster to identify polynyas in each using bucketfill algorithm. 
+```{r, warning=FALSE, eval = FALSE}
+only_polynya <- lapply(lst, function(x, thrshold = ice_threshold){ #
+  suppressWarnings(rst <- rast(x, subds = "ice_conc")/100)
+  names(rst) <- paste0("ice_conc_", substr(x, nchar(x)-14, nchar(x)-7))
+
+  #add border to deal with ice coverage beyond extent
+  rst[cellFromRowCol(rst, 1:nrow(rst), 1)] <- 0
+  rst[cellFromRowCol(rst, 1:nrow(rst), ncol(rst))] <- 0
+  rst[cellFromRowCol(rst, 1, 1:ncol(rst))] <- 0
+  rst[cellFromRowCol(rst, nrow(rst), 1:ncol(rst))] <- 0
+
+  rst[cellFromRowColCombine(rst, 1:rowFromY(rst, 500), 1:colFromX(rst, -3500))] <- 0 # remove S America
+  rst[cellFromRowColCombine(rst, 1:rowFromY(rst, 4000), colFromX(rst, 4000):ncol(rst))] <- 0 # remove S Africa
+  rst[cellFromRowColCombine(rst, rowFromY(rst, -4000):nrow(rst), colFromX(rst, 0):ncol(rst))] <- 0 # remove NZ/Aus
+  rst[cellFromRowColCombine(rst, rowFromY(rst, -2000):nrow(rst), colFromX(rst, 4000):ncol(rst))] <- 0 # remove Aus remainder
+
+  #binarise polynya
+  rst[rst < thrshold] <- 0
+  rst <- setValues(rst, as.vector(bucketfill(as.cimg(t(as.matrix(rst, wide = TRUE))), x = 250, y = 10, color = 999, sigma = 0, high_connex = FALSE)))
+  rst[rst >= thrshold] <- NA
+  return(rst)
+})
+```
+Define the South Pole as something to return if no polynya vectors are identified (subsequently removed). 
+```{r}
+Spole <- data.frame(id=1, name="pole")
+Spole$wkt <- NULL
+Spole $lon <- 0
+Spole $lat <- 0
+Spole <- vect(Spole, geom=c("lon", "lat"), crs = "+proj=laea +lat_0=-90 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +units=km +no_defs")
+```
+Combine the geometries, returning a point at the South Pole if none (returning NULL messes with the loop).
+```{r, eval = FALSE}
+poly_combgeom <- lapply(only_polynya, function(x){
+	ply <- as.polygons(x) 
+	ifelse(is.null(ply), return(Spole), return(disagg(ply)))
+	})
+```
+Prepare label list for all polynya polygons identified and then loop across geometries to compile into one vector object.
+```{r, eval = FALSE}
+lab_poly <- list()
+
+for(i in 1:length(poly_combgeom)){
+		if(is.polygons(poly_combgeom[[i]])){
+			split_poly <- list()
+			for(j in 1:length(poly_combgeom[[i]])){
+				poly_geom <- poly_combgeom[[i]][j]
+				poly_geom$polyID <- paste(substr(names(only_polynya[[i]]), 10, 17), formatC(j, width = 5, flag = "0"), sep = "_")
+				split_poly <- c(split_poly, poly_geom[,-1])
+			}
+			lab_poly <- c(lab_poly, vect(split_poly))}
+		}
+```
+Remove the South Pole points/NULL geometries. 
+```{r, eval = FALSE}
+while(sum(sapply(lab_poly, function(x){!is.polygons(x)})) > 0){
+lab_poly[[sapply(lab_poly, function(x){!is.polygons(x)})[1]]] <- NULL
+}
+```
+Loop over polygons one by one and identify forwards and backwards overlap. 
+```{r, eval = FALSE}
+for(i in 1:length(lab_poly)){
+		if(i > 1){ 
+		prev_overlap <- relate(buffer(lab_poly[[i]], width = 5), lab_poly[[i-1]], "intersects") |> apply(1, function(x){lab_poly[[i-1]]$polyID[x]})
+		if(length(prev_overlap) == 0){prev_overlap <- ""}}else{
+		prev_overlap <- vector("list", length(lab_poly[[i]]))}		
+			
+		if(i < length(lab_poly)){
+		fwrd_overlap <- relate(buffer(lab_poly[[i]], width = 5), lab_poly[[i+1]], "intersects") |> apply(1, function(x){lab_poly[[i+1]]$polyID[x]})
+		if(length(fwrd_overlap) == 0){fwrd_overlap <- ""}}else{
+		fwrd_overlap <- vector("list", length(lab_poly[[i]]))}		
+		
+		lab_poly[[i]]$prv_poly <- sapply(prev_overlap, function(x){paste0(x, collapse = "/")})
+		lab_poly[[i]]$nxt_poly <- sapply(fwrd_overlap, function(x){paste0(x, collapse = "/")})
+	}
+```
+Return overlap data in usable format. 
+```{r, eval = FALSE}
+lab_poly <- lapply(lab_poly, function(x){
+	return(x[,c("polyID", "prv_poly", "nxt_poly")])
+})
+```
+Group list of polygons into a single vector dataset and define the coordinate reference system.
+```{r, eval = FALSE}
+all_polyDF <- vect(lab_poly) 
+crs(all_polyDF) <- "+proj=laea +lat_0=-90 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +units=km +no_defs"
+```
+Calculate date from info from polyny ID field. Calculate the area of each polygon in km.
+```{r, eval = FALSE}
+all_polyDF$year <- sapply(all_polyDF$polyID, function(x){as.numeric(substr(x, 1, 4))})
+all_polyDF$month <- sapply(all_polyDF$polyID, function(x){as.numeric(substr(x, 5, 6))})
+all_polyDF$day <- sapply(all_polyDF$polyID, function(x){as.numeric(substr(x, 7, 8))})
+all_polyDF$area_km <- expanse(all_polyDF, unit = "km") #calc area
+```
+Identify major polynyas.
+```{r, eval = FALSE}
+all_polyDF$major_poly <- rep(NA, length(all_polyDF))
+all_polyDF$isMajor <- rep(FALSE, length(all_polyDF))
+```
+Order polynyas by area and date of occurrence. 
+```{r, eval = FALSE}
+area_order <- order(all_polyDF$area_km, all_polyDF $year, all_polyDF $month, all_polyDF $day, decreasing = c(TRUE, FALSE, FALSE, FALSE))
+```
+Work through ordered polynyas sequentially and link them in time and space with all other connected polynyas (i.e. following the chains of prev and forward relationships until they are exhausted). 
+
+**Note: because this necessarily runs sequentially it can take a long time on a desktop computer (~5 days using 50% threshold)**
+```{r, eval = FALSE}
+polydone <- c()
+
+for(i in 1:length(area_order)){
+	if((i/10000)%%1==0){print(paste(Sys.time(), "-", round(i/length(area_order),5)*100, "% completed."))
+	writeVector(all_polyDF, paste0("INTERMED_polynya_", ice_threshold, "pc", i-1,".shp"), overwrite = T)
+	if(file.exists(paste0("INTERMED_polynya_", ice_threshold, "pc", i-10001,".shp"))){file.remove(c(paste0("INTERMED_polynya_", ice_threshold, "pc", i-10001,".shp"), paste0("INTERMED_polynya_", ice_threshold, "pc", i-10001,".cpg"), paste0("INTERMED_polynya_", ice_threshold, "pc", i-10001,".dbf"), paste0("INTERMED_polynya_", ice_threshold, "pc", i-10001,".prj"), paste0("INTERMED_polynya_", ice_threshold, "pc", i-10001,".shx")))}
+	}
+polynum <- area_order[i] 
+if(is.na(all_polyDF$major_poly[polynum])){
+	all_polyDF$major_poly[polynum] <- all_polyDF$polyID[polynum]
+	all_polyDF$isMajor[polynum] <- TRUE
+	
+	#need to follow prev and nxt to identify chains
+	fwrd <- which(all_polyDF$polyID %in% unlist(strsplit(all_polyDF$nxt_poly[polynum], "/")))
+	bwrd <- which(all_polyDF$polyID %in% unlist(strsplit(all_polyDF$prv_poly[polynum], "/")))
+	
+	todo <- c(fwrd, bwrd)
+
+	while(length(todo) > 0){
+	#forward chain #if it's got a major poly use that to pass forward/back
+	for(j in unique(todo[!(todo %in% polydone)])){
+				if(is.na(all_polyDF$major_poly[j])){all_polyDF$major_poly[j] <- all_polyDF$major_poly[polynum]}
+				todo <- c(todo, which(all_polyDF$polyID %in% unlist(strsplit(all_polyDF$prv_poly[j], "/"))), which(all_polyDF$polyID %in% unlist(strsplit(all_polyDF$nxt_poly[j], "/"))))
+				polydone <- c(polydone, j)
+				intermed <- unique(todo[!(todo %in% polydone)])				
+				if(length(intermed) > 0){todo <- intermed}else{
+					polydone <- c()
+					todo <- c()
+				}
+				
+				}
+				}
+}else{next}}
+```
+Code in a date field using year, month, day fields.
+```{r, eval = FALSE}
+all_polyDF$YYYYMMDD <- paste0(all_polyDF$year, formatC(all_polyDF $month, width = 2, flag = "0"), formatC(all_polyDF $day, width = 2, flag = "0"))
+```
+For polygons/polynyas at the end of the forward or backward chain, identify if the poly 'begins' or 'ends' with either ice or open water.
+```{r, eval = FALSE}
+for(j in which((all_polyDF$nxt_poly == "" | is.na(all_polyDF$nxt_poly)) & all_polyDF$YYYYMMDD != all_polyDF$YYYYMMDD[length(all_polyDF)])){
+			rst <- suppressWarnings(rast(lst[which(substr(lst, nchar(lst)-14, nchar(lst)-7) == all_polyDF$YYYYMMDD[j])+1], subds = "ice_conc")/100)
+			#crs(rst) <- "+proj=laea +lat_0=-90 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +units=km +no_defs"
+			#ext(rst) <- ice_ext
+			#rst <- rst*100
+
+			if(min(extract(rst, all_polyDF[j]), na.rm = TRUE) < ice_threshold){all_polyDF$nxt_poly[j] <- "open"}else{all_polyDF$nxt_poly[j] <- "ice"}
+		}
+```
+As above but looping over the previous polynya field. 
+```{r, eval = FALSE}
+for(j in which((all_polyDF$prv_poly == "" | is.na(all_polyDF$prv_poly)) & all_polyDF$YYYYMMDD != all_polyDF$YYYYMMDD[1])){
+			rst <- suppressWarnings(rast(lst[which(substr(lst, nchar(lst)-14, nchar(lst)-7) == all_polyDF$YYYYMMDD[j])-1], subds = "ice_conc")/100)
+			if(min(extract(rst, all_polyDF[j]), na.rm = TRUE) < ice_threshold){all_polyDF$prv_poly[j] <- "open"}else{all_polyDF$prv_poly[j] <- "ice"}
+		}
+```
+Load landmask with 5 km buffer to identify coastal and open ocean polynyas and then classify every polynya.
+```{r, eval = FALSE}
+ATA_5kmbuffer<- buffer(vect("antarctic_eumarsat_coastline.shp"), width = 5)
+all_polyDF$coastal <- rep(FALSE, length(all_polyDF))
+all_polyDF$coastal[unique(unlist(parallel::mclapply(1:length(ATA_5kmbuffer), mc.cores = 6, function(x){which(relate(ATA_5kmbuffer[x,], all_polyDF, relation = "intersects")[1,])})))] <- TRUE
+```
+Create field which identifies which polynyas are themselves major polynyas (i.e. where the major_poly field matches the polynya ID). 
+```{r, eval = FALSE}
+all_polyDF$isMajor <- all_polyDF$major_poly == all_polyDF$polyID
+```
+Classify each polynya/polygon into sectors. Where it spans multiple sectors take the modal value (i.e. the one with greatest coverage).
+```{r, eval = FALSE}
+statMode <- function(v, na.rm) {
+	uniqv <- unique(v)
+	uniqv[which.max(tabulate(match(v, uniqv)))]
+	} 
+
+SOsectors <- project(vect("data/antarctic sectors/ATA_SOsect.shp"), all_polyDF)
+sectorRST <- terra::rasterize(SOsectors, rast(SOsectors, res = 10), field = "id", fun = max) 
+
+all_polyDF$sector <- c("WDL", "IND","PAC", "ROS", "AMD", "BEL")[sapply(1:length(all_polyDF), function(x){statMode(extract(sectorRST, all_polyDF[x])[,"id"], na.rm = TRUE)})] #sectors numbered clockwise from peninsula
+```
+
+```{r, echo = FALSE}
+all_polyDF <- vect("results/50_pc_threshold/polynya_0.5pc.shp")
+```
+```{r}
+all_polyDF
+```
+Build a data frame summarising daily polynya metrics across all sectors examined. Runs in parallel on 6 cores to speed things up - can swap in base `lapply` if preferred. 
+```{r, eval = FALSE}
+daily_poly <- parallel::mclapply(unique(all_polyDF$YYYYMMDD), mc.cores = 6, FUN = function(dte){
+	#All sectors
+	polydat <- all_polyDF[all_polyDF $YYYYMMDD == dte, ] 
+	area_comb <- sum(polydat$area_km)
+	n_poly_comb <- nrow(polydat)
+	area_coastal <- sum(polydat$area_km[polydat $coastal == 1])
+	n_poly_coastal <- nrow(polydat[polydat $coastal == 1,])
+	area_oceanic <- sum(polydat$area_km[polydat $coastal == 0])
+	n_poly_oceanic <- nrow(polydat[polydat $coastal == 0,])
+	
+	#WDL
+	WDLpolydat <- all_polyDF[all_polyDF $YYYYMMDD == dte & all_polyDF$sector_v2 == "WDL", ] 
+	WDLarea_comb <- sum(WDLpolydat$area_km)
+	WDLn_poly_comb <- nrow(WDLpolydat)
+	WDLarea_coastal <- sum(WDLpolydat$area_km[WDLpolydat $coastal == 1])
+	WDLn_poly_coastal <- nrow(WDLpolydat[WDLpolydat $coastal == 1,])
+	WDLarea_oceanic <- sum(WDLpolydat$area_km[WDLpolydat $coastal == 0])
+	WDLn_poly_oceanic <- nrow(WDLpolydat[WDLpolydat$coastal == 0,])
+
+	#AMD
+	AMDpolydat <- all_polyDF[all_polyDF $YYYYMMDD == dte & all_polyDF$sector_v2 == "AMD", ] 
+	AMDarea_comb <- sum(AMDpolydat$area_km)
+	AMDn_poly_comb <- nrow(AMDpolydat)
+	AMDarea_coastal <- sum(AMDpolydat$area_km[AMDpolydat $coastal == 1])
+	AMDn_poly_coastal <- nrow(AMDpolydat[AMDpolydat $coastal == 1,])
+	AMDarea_oceanic <- sum(AMDpolydat$area_km[AMDpolydat $coastal == 0])
+	AMDn_poly_oceanic <- nrow(AMDpolydat[AMDpolydat$coastal == 0,])
+
+	#BEL
+	BELpolydat <- all_polyDF[all_polyDF $YYYYMMDD == dte & all_polyDF$sector_v2 == "BEL", ] 
+	BELarea_comb <- sum(BELpolydat$area_km)
+	BELn_poly_comb <- nrow(BELpolydat)
+	BELarea_coastal <- sum(BELpolydat$area_km[BELpolydat $coastal == 1])
+	BELn_poly_coastal <- nrow(BELpolydat[BELpolydat $coastal == 1,])
+	BELarea_oceanic <- sum(BELpolydat$area_km[BELpolydat $coastal == 0])
+	BELn_poly_oceanic <- nrow(BELpolydat[BELpolydat$coastal == 0,])
+
+	#PAC
+	PACpolydat <- all_polyDF[all_polyDF $YYYYMMDD == dte & all_polyDF$sector_v2 == "PAC", ] 
+	PACarea_comb <- sum(PACpolydat$area_km)
+	PACn_poly_comb <- nrow(PACpolydat)
+	PACarea_coastal <- sum(PACpolydat$area_km[PACpolydat $coastal == 1])
+	PACn_poly_coastal <- nrow(PACpolydat[PACpolydat $coastal == 1,])
+	PACarea_oceanic <- sum(PACpolydat$area_km[PACpolydat $coastal == 0])
+	PACn_poly_oceanic <- nrow(PACpolydat[PACpolydat$coastal == 0,])
+
+	#ROS
+	ROSpolydat <- all_polyDF[all_polyDF $YYYYMMDD == dte & all_polyDF$sector_v2 == "ROS", ] 
+	ROSarea_comb <- sum(ROSpolydat$area_km)
+	ROSn_poly_comb <- nrow(ROSpolydat)
+	ROSarea_coastal <- sum(ROSpolydat$area_km[ROSpolydat $coastal == 1])
+	ROSn_poly_coastal <- nrow(ROSpolydat[ROSpolydat $coastal == 1,])
+	ROSarea_oceanic <- sum(ROSpolydat$area_km[ROSpolydat $coastal == 0])
+	ROSn_poly_oceanic <- nrow(ROSpolydat[ROSpolydat$coastal == 0,])
+
+	#IND
+	INDpolydat <- all_polyDF[all_polyDF $YYYYMMDD == dte & all_polyDF$sector_v2 == "IND", ] 
+	INDarea_comb <- sum(INDpolydat$area_km)
+	INDn_poly_comb <- nrow(INDpolydat)
+	INDarea_coastal <- sum(INDpolydat$area_km[INDpolydat $coastal == 1])
+	INDn_poly_coastal <- nrow(INDpolydat[INDpolydat $coastal == 1,])
+	INDarea_oceanic <- sum(INDpolydat$area_km[INDpolydat $coastal == 0])
+	INDn_poly_oceanic <- nrow(INDpolydat[INDpolydat$coastal == 0,])
+
+	data.frame(date = as.Date(dte, format = "%Y%m%d"), area_comb, n_poly_comb, area_coastal, n_poly_coastal, area_oceanic, n_poly_oceanic, WDLarea_comb, WDLn_poly_comb, WDLarea_coastal, WDLn_poly_coastal, WDLarea_oceanic, WDLn_poly_oceanic, AMDarea_comb, AMDn_poly_comb, AMDarea_coastal, AMDn_poly_coastal, AMDarea_oceanic, AMDn_poly_oceanic, BELarea_comb, BELn_poly_comb, BELarea_coastal, BELn_poly_coastal, BELarea_oceanic, BELn_poly_oceanic, PACarea_comb, PACn_poly_comb, PACarea_coastal, PACn_poly_coastal, PACarea_oceanic, PACn_poly_oceanic, ROSarea_comb, ROSn_poly_comb, ROSarea_coastal, ROSn_poly_coastal, ROSarea_oceanic, ROSn_poly_oceanic, INDarea_comb, INDn_poly_comb, INDarea_coastal, INDn_poly_coastal, INDarea_oceanic, INDn_poly_oceanic)
+}) |> do.call(what = rbind)
+```
+```{r, echo = FALSE}
+daily_poly <- read.csv("results/polynya_daily_summary_0p5.csv", row.names = 1)
+```
+
+```{r}
+daily_poly <- xts(daily_poly[,-1], order.by = as.Date(daily_poly[,1]))
+
+poly_daily_reg <- na.fill(merge(daily_poly, xts(order.by = seq(as.Date("1979-01-01"), as.Date("2022-12-31"), by = 1))), fill = c("extend", "extend", "extend"))
+
+poly_daily_reg_noleap <- poly_daily_reg[-poly_daily_reg[paste0(1979:2022, "-02-29"), which.i=TRUE],]
+
+poly_daily_reg_noleap_trend <- data.frame(apply(poly_daily_reg_noleap, MARGIN = 2, FUN = function(col){
+  as.vector(stats::decompose(ts(col, frequency = 365, start = 1979), "multiplicative")$trend)})) #detrend the data
+
+poly_daily_reg_noleap_trend$date <- index(poly_daily_reg_noleap)
+
+polydata_for_plotting <-  pivot_longer(data = poly_daily_reg_noleap_trend, cols = ends_with("area_coastal"), names_to = "sector", values_to = "poly_extent")
+ggplot(data = tst, aes(x = date, y = poly_extent)) + geom_line() + geom_smooth() + facet_wrap(~sector, ncol = 1, scales = "free_y")
+```
+
