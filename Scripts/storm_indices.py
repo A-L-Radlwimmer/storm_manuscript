@@ -3,6 +3,15 @@ import numpy as np
 from scipy.optimize import curve_fit
 from scipy.stats import t
 
+### test detrending by Scott Base temperature record to eliminate some form of global warming effect ###
+#######################
+def detrend_temperature(input_df, t_column_name, trend_c_per_year=0.015695, ref_date='1964-10-01'):
+    df = input_df.copy()
+    ref = pd.Timestamp(ref_date)
+    years_since_ref = (df.index - ref).days / 365.2422
+    df[t_column_name] = (df[t_column_name] - trend_c_per_year * years_since_ref)
+    return df
+#######################
 
 
 def compute_climatologies(input_df, t_column_name, p_column_name):
@@ -14,7 +23,7 @@ def compute_climatologies(input_df, t_column_name, p_column_name):
     Output:  T_clim ... pandas series with month-day-hour multi-index, containing temperature climatology.
              P_clim ... pandas series with month-day-hour multi-index, containing mean sea level pressure climatology.
     '''
-    
+
     df = input_df.copy()
     
     df['T_smoothed'] = df[t_column_name].rolling('3D', center=True).mean()
@@ -38,6 +47,9 @@ def compute_si(input_df, t_column_name, p_column_name, si_column_name):
     '''
     
     df = input_df.copy()
+    ###########################
+    #df = detrend_temperature(df, t_column_name, trend_c_per_year=0.015695, ref_date='1964-10-01')
+    ###########################
     
     # compute climatologies
     t_clim, p_clim = compute_climatologies(df, t_column_name, p_column_name)
@@ -124,7 +136,6 @@ def compute_anomalies(input_df, t_column_name, p_column_name):
     output_df = df[['T_anom', 'P_anom']]
     
     return output_df
-
 
 def linear_fit(df, column):
     '''
