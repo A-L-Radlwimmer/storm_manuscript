@@ -1,6 +1,6 @@
 INCREASING WINTER STORMINESS IN THE SOUTHERN ROSS SEA, ANTARCTICA
 Author: Antonia L. Radlwimmer
-Date: 18.03.2026
+Date: 11.05.2026
 
 This repository contains the python scripts (and QGIS layers) used for the manuscript Radlwimmer et al., Increasing Winter Storminess in the Southern Ross Sea, Antarctica, submitted to Geophysical Research Letters in March 2026. All scripts should be ready to run from the repository, it includes all necessary data and figures (Exception: The Fraser & Massom (2020) dataset is too large to be included here and must be downloaded separately). It was written and created entirely by me, Antonia Radlwimmer. I used generative AI to help my coding. The folders contain the following:
 
