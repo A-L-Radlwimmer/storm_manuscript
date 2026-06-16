@@ -1,0 +1,6 @@
+ScottBase
+             Trend   P-Value Tau (Correlation) Score (S) Slope (Sen)
+all     increasing  0.001896          0.275706     488.0    0.003649
+winter  increasing  0.002897          0.264407     468.0    0.006488
+summer    no trend  0.054495          0.169399     310.0    0.001591
+

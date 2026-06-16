@@ -1,0 +1,117 @@
+ScottBase
+                   Trend   P-Value       Tau  Score Sen Slope  Intercept
+count         increasing  0.000442  0.270621  479.0  0.377155  33.373922
+count summer    no trend  0.111782  0.139891  256.0   0.08422   7.473404
+count winter  increasing  0.002161  0.246328  436.0       0.3      22.15
+mean            no trend  0.055056  0.140113  248.0  0.007673   2.374321
+mean summer     no trend  0.498711  0.065941  109.0   0.00261   1.690036
+mean winter   increasing  0.037876   0.20565  364.0  0.011836   2.537458
+
+Lettau
+                   Trend   P-Value       Tau  Score Sen Slope  Intercept
+count         increasing  0.000052   0.34958  208.0       1.0       24.0
+count summer    no trend  0.342418  0.108108   72.0       0.0        2.0
+count winter  increasing  0.000042  0.297348  157.0  0.697826  25.834783
+mean            no trend  0.277207  0.115966   69.0  0.012034    2.56094
+mean summer     no trend  0.623812 -0.073333  -22.0 -0.004957   1.470915
+mean winter     no trend  0.065207  0.227273  120.0  0.022059   2.419608
+
+Margaret
+                   Trend   P-Value       Tau Score Sen Slope  Intercept
+count         increasing       0.0       0.5  60.0  1.909091  25.681818
+count summer  increasing  0.007485       0.5  60.0  0.833333       0.25
+count winter  increasing       0.0       0.4  48.0  1.091667    20.3125
+mean            no trend  0.685329  0.083333  10.0   0.02721   2.667812
+mean summer     no trend  0.127204  0.333333  26.0  0.033135   1.378909
+mean winter   increasing  0.001653      0.25  30.0  0.047281   2.805576
+
+Gill
+                   Trend   P-Value       Tau  Score Sen Slope  Intercept
+count         increasing    0.0006  0.352774  248.0  0.791667  27.354167
+count summer    no trend  0.072779  0.203414  143.0  0.136364   1.977273
+count winter  increasing  0.002679   0.28165  198.0  0.583333  20.208333
+mean            no trend  0.577328  0.041252   29.0  0.004423   2.691375
+mean summer     no trend  0.090255 -0.201613 -100.0  -0.00898   1.597466
+mean winter     no trend  0.279615  0.123755   87.0  0.013465   2.786117
+
+Schwerdtfeger
+                   Trend   P-Value       Tau  Score Sen Slope  Intercept
+count         increasing  0.005996  0.285714  180.0  0.770625  30.514063
+count summer    no trend  0.373289  0.118619   79.0  0.078462   3.587692
+count winter  increasing  0.000073  0.311111  196.0  0.666667  24.333333
+mean            no trend       1.0       0.0    0.0  -0.00002   2.746593
+mean summer     no trend  0.187946  0.096774   48.0  0.006989   1.469252
+mean winter     no trend  0.829784  0.019048   12.0  0.002252   2.870414
+
+Marilyn
+                   Trend   P-Value       Tau  Score Sen Slope  Intercept
+count         increasing  0.000232  0.372688  262.0  0.909091  20.181818
+count summer    no trend   0.06408  0.193651  122.0  0.228758   5.496732
+count winter  increasing  0.013388  0.171429  108.0  0.333333  26.666667
+mean            no trend  0.208685   0.14367  101.0  0.011129   2.474818
+mean summer     no trend  0.698489  0.049242   26.0  0.002641   1.665591
+mean winter     no trend  0.160631  0.165079  104.0  0.016075   2.682219
+
+Ferrell
+                   Trend   P-Value       Tau  Score Sen Slope Intercept
+count         increasing  0.022748  0.245064  211.0       0.5     29.75
+count summer    no trend  0.709339  0.041463   34.0       0.0       6.0
+count winter  increasing  0.040243  0.206736  178.0       0.4      25.3
+mean            no trend  0.224829  0.131243  113.0  0.011113  2.595201
+mean summer     no trend  0.635227  0.058824   33.0   0.00325  1.406114
+mean winter   increasing  0.003447  0.247387  213.0  0.022363  2.539514
+
+LaurieII
+                   Trend   P-Value       Tau Score Sen Slope  Intercept
+count           no trend  0.135286  0.152174  42.0  0.583333  29.791667
+count summer    no trend  0.925141 -0.016667  -5.0       0.0        6.0
+count winter    no trend       NaN  0.188406  52.0  0.616883  23.905844
+mean            no trend  0.205863  0.188406  52.0  0.029565   2.335902
+mean summer     no trend  0.927818  0.019048   4.0  0.000733   1.532071
+mean winter   increasing  0.002897  0.231884  64.0   0.03547   2.481596
+
+Arelis
+                   Trend   P-Value       Tau  Score Sen Slope  Intercept
+count           no trend  0.105357    0.1875   93.0  0.607692  35.080769
+count summer    no trend   0.18154 -0.167339  -83.0 -0.204167  13.164583
+count winter  increasing       0.0  0.270161  134.0       0.7      23.15
+mean            no trend  0.066883  0.229839  114.0  0.018873   2.273387
+mean summer     no trend  0.419202 -0.092473  -43.0 -0.005653   1.851585
+mean winter     no trend  0.131521  0.189516   94.0  0.020873   2.492294
+
+MarblePoint
+                   Trend   P-Value       Tau  Score Sen Slope  Intercept
+count           no trend  0.985351  0.003171    3.0       0.0       40.5
+count summer    no trend  0.068663 -0.137374 -136.0 -0.115966  10.551261
+count winter    no trend  0.621425  0.047569   45.0  0.077935  29.824393
+mean            no trend  0.969879  0.004228    4.0  0.000356   2.706603
+mean summer   decreasing  0.026238  -0.24971 -215.0 -0.013673   2.017637
+mean winter     no trend  0.204905  0.105708  100.0  0.007588   2.706085
+
+Manuela
+                   Trend   P-Value       Tau  Score Sen Slope Intercept
+count           no trend  0.052312  0.192982  143.0     0.375    36.875
+count summer    no trend   0.75412  0.026923   21.0       0.0      18.5
+count winter  increasing  0.025793  0.249663  185.0       0.4      15.4
+mean            no trend  0.594544 -0.060729  -45.0  -0.00418  2.566314
+mean summer     no trend  0.239294 -0.130769 -102.0 -0.009146  2.305468
+mean winter     no trend  0.771568  0.033738   25.0  0.002117  2.611364
+
+Alessandra
+                   Trend   P-Value       Tau  Score Sen Slope  Intercept
+count           no trend  0.744457 -0.041667  -22.0 -0.090909  44.454545
+count summer    no trend  0.582113 -0.067736  -38.0 -0.052632  13.868421
+count winter    no trend  0.757295  0.040323   20.0  0.047149  27.769189
+mean            no trend  0.117598 -0.193182 -102.0 -0.019546   2.913513
+mean summer   decreasing  0.024239 -0.272727 -153.0 -0.030674    2.40785
+mean winter     no trend  0.322564    -0.125  -62.0 -0.015695   3.166138
+
+Silvia
+                   Trend   P-Value       Tau  Score Sen Slope  Intercept
+count           no trend  0.476508 -0.097884  -37.0 -0.289916  44.413866
+count summer    no trend  0.638236 -0.064039  -26.0  -0.10101  14.414141
+count winter    no trend  0.497122      -0.1  -30.0 -0.256579  35.078947
+mean          decreasing  0.033471 -0.293447 -103.0 -0.028353   3.003478
+mean summer   decreasing  0.003513 -0.333333 -126.0 -0.045062   2.819596
+mean winter     no trend  0.198959 -0.186667  -56.0 -0.018992   2.934466
+

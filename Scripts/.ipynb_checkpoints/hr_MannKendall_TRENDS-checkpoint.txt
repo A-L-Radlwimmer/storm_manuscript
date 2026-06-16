@@ -1,0 +1,78 @@
+ScottBase
+             Trend   P-Value Tau (Correlation) Score (S) Slope (Sen)
+all     increasing  0.001896          0.275706     488.0    0.003649
+winter  increasing  0.000115          0.264407     468.0    0.006488
+summer    no trend  0.054495          0.169399     310.0    0.001591
+
+Lettau
+             Trend   P-Value Tau (Correlation) Score (S) Slope (Sen)
+all     increasing  0.003766          0.344538     205.0    0.010291
+winter  increasing   0.00735          0.329545     174.0    0.016972
+summer    no trend  0.191638          0.201201     134.0    0.002063
+
+Margaret
+             Trend   P-Value Tau (Correlation) Score (S) Slope (Sen)
+all     increasing  0.004562          0.533333      64.0    0.020659
+winter    no trend  0.064903              0.35      42.0    0.033079
+summer  increasing  0.027377          0.416667      50.0     0.01397
+
+Gill
+             Trend   P-Value Tau (Correlation) Score (S) Slope (Sen)
+all     increasing  0.000978          0.339972     239.0    0.007819
+winter  increasing  0.010327          0.291607     205.0    0.013549
+summer    no trend  0.092059          0.192034     135.0    0.002324
+
+Schwerdtfeger
+             Trend   P-Value Tau (Correlation) Score (S) Slope (Sen)
+all     increasing  0.000728          0.266667     168.0    0.006642
+winter  increasing  0.000256          0.247619     156.0    0.011003
+summer    no trend  0.248221          0.183183     122.0    0.001982
+
+Marilyn
+             Trend   P-Value Tau (Correlation) Score (S) Slope (Sen)
+all     increasing  0.013346          0.254623     179.0    0.006493
+winter    no trend  0.366441          0.114286      72.0    0.005429
+summer    no trend  0.125205          0.203175     128.0    0.003317
+
+Ferrell
+             Trend   P-Value Tau (Correlation) Score (S) Slope (Sen)
+all     increasing  0.033659          0.228804     197.0    0.005305
+winter  increasing  0.030198          0.233449     201.0     0.00977
+summer    no trend  0.629115          0.053659      44.0     0.00062
+
+LaurieII
+           Trend   P-Value Tau (Correlation) Score (S) Slope (Sen)
+all     no trend       NaN          0.188406      52.0    0.007029
+winter  no trend       NaN           0.23913      66.0    0.019359
+summer  no trend  0.761422         -0.046667     -14.0   -0.000706
+
+Arelis
+             Trend   P-Value Tau (Correlation) Score (S) Slope (Sen)
+all       no trend  0.101451          0.205645     102.0    0.005543
+winter  increasing  0.028581          0.274194     136.0    0.014991
+summer    no trend  0.140025         -0.185484     -92.0    -0.00331
+
+MarblePoint
+             Trend   P-Value Tau (Correlation) Score (S) Slope (Sen)
+all       no trend  0.738553         -0.035941     -34.0   -0.000457
+winter    no trend  0.430871          0.090909      86.0    0.002489
+summer  decreasing  0.000001         -0.262626    -260.0   -0.003315
+
+Manuela
+           Trend   P-Value Tau (Correlation) Score (S) Slope (Sen)
+all     no trend  0.279951          0.149798     111.0     0.00274
+winter  no trend  0.055965          0.214575     159.0    0.006762
+summer  no trend  0.317486         -0.097436     -76.0    -0.00164
+
+Alessandra
+           Trend   P-Value Tau (Correlation) Score (S) Slope (Sen)
+all     no trend  0.768457         -0.037879     -20.0    -0.00089
+winter  no trend  0.685175          0.052419      26.0    0.001719
+summer  no trend  0.136672         -0.215686    -121.0   -0.004151
+
+Silvia
+             Trend   P-Value Tau (Correlation) Score (S) Slope (Sen)
+all       no trend  0.489265         -0.095238     -36.0   -0.003466
+winter    no trend  0.691342             -0.06     -18.0   -0.004051
+summer  decreasing  0.037329         -0.275862    -112.0   -0.006391
+

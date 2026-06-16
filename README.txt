@@ -23,6 +23,7 @@ All figures produced by the scripts in this repository are saved in this folder.
 Scripts
 All scripts can be run simply by restarting the kernel and running all cells in order (except for plot_2019_2024.ipynb, which needs the first part of the script to be run for each station before the plotting cells can be executed).
 - Preprocess_Data ... folder containing preprocessing scripts for downloading data and bringing it into a uniform format
+- 2017.ipynb ... export ice ages computed from Fraser & Massom, 2020, in Fraser.ipynb to tif-file for use in QGIS
 - Compute_and_Plot_SI.ipynb ... main storm index analysis; choose weather station in cell at beginning
 - DataFile.ipynb ... generates Data/si_file.csv
 - Duffy_and_SAM.ipynb ... analyzes relationship of Scott Base storm index and SAM and polynya activity
